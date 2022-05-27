@@ -26,9 +26,9 @@ except (ImportError, ModuleNotFoundError):
                       '`init_pose_model` form `mmpose.apis`. These apis are '
                       'required in this script! ')
 
-# ----------------------------------------- 이 부분 넣고 해야함
-mmdet_root = ''
-mmpose_root = ''
+# ----------------------------------------- 수정
+mmdet_root = '/content/mmdetection'
+mmpose_root = '/content/mmpose'
 # ------------------------------------------------------
 args = abc.abstractproperty()
 args.det_config = f'{mmdet_root}/configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco-person.py'  # noqa: E501
@@ -308,7 +308,7 @@ def pose_inference(args, frame_paths, det_results):
     return kp
 
 
-def ntu_pose_extraction(vid, skip_postproc=False):
+def ntu_pose_extraction(vid, skip_postproc=True): #수정
     frame_paths = extract_frame(vid)
     det_results = detection_inference(args, frame_paths)
     if not skip_postproc:
@@ -344,7 +344,5 @@ if __name__ == '__main__':
     args.video = global_args.video
     args.output = global_args.output
     args.skip_postproc = global_args.skip_postproc
-    anno = ntu_pose_extraction(args.video, args.skip_postproc)
-    # 위에 args.skip_postproc 지우고 함수가서 기본값 True로
-    # 안 건너뛰면 easy example 아니면 걸림
+    anno = ntu_pose_extraction(args.video)  # 수정
     mmcv.dump(anno, args.output)
