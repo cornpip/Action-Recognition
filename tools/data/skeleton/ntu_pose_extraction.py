@@ -26,9 +26,10 @@ except (ImportError, ModuleNotFoundError):
                       '`init_pose_model` form `mmpose.apis`. These apis are '
                       'required in this script! ')
 
+# ----------------------------------------- 이 부분 넣고 해야함
 mmdet_root = ''
 mmpose_root = ''
-
+# ------------------------------------------------------
 args = abc.abstractproperty()
 args.det_config = f'{mmdet_root}/configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco-person.py'  # noqa: E501
 args.det_checkpoint = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco-person/faster_rcnn_r50_fpn_1x_coco-person_20201216_175929-d022e227.pth'  # noqa: E501
@@ -344,4 +345,6 @@ if __name__ == '__main__':
     args.output = global_args.output
     args.skip_postproc = global_args.skip_postproc
     anno = ntu_pose_extraction(args.video, args.skip_postproc)
+    # 위에 args.skip_postproc 지우고 함수가서 기본값 True로
+    # 안 건너뛰면 easy example 아니면 걸림
     mmcv.dump(anno, args.output)
