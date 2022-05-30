@@ -1,0 +1,4 @@
+punch
+nikick
+right-kick
+left-kick
