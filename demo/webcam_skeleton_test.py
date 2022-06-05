@@ -81,7 +81,7 @@ def show_results():
         _, frame = camera.read()
         frame_queue.append(np.array(frame[:, :, ::-1]))
         # print(frame)
-        print("----------------")
+        # print("----------------")
 
         if len(result_queue) != 0:
             print(1)
@@ -99,6 +99,7 @@ def show_results():
                             FONTCOLOR, THICKNESS, LINETYPE)
 
         elif len(text_info) != 0:
+            print(text_info)
             print(2)
             for location, text in text_info.items():
                 cv2.putText(frame, text, location, FONTFACE, FONTSCALE,
@@ -124,6 +125,7 @@ def show_results():
 
 
 def inference():
+    print("inference")
     score_cache = deque()
     scores_sum = 0
     cur_time = time.time()
@@ -131,11 +133,15 @@ def inference():
         cur_windows = []
 
         while len(cur_windows) == 0:
+            # sample length 고정 frame queue 쌓이면 popleft하면서 추론
+            # print(len(frame_queue))
             if len(frame_queue) == sample_length:
                 cur_windows = list(np.array(frame_queue))
+                print("------------")
                 if data['img_shape'] is None:
                     data['img_shape'] = frame_queue.popleft().shape[:2]
 
+        print("ssssssssssss")
         cur_data = data.copy()
         cur_data['imgs'] = cur_windows
         cur_data = test_pipeline(cur_data)
@@ -146,6 +152,7 @@ def inference():
         with torch.no_grad():
             scores = model(return_loss=False, **cur_data)[0]
 
+        # print(scores)
         score_cache.append(scores)
         scores_sum += scores
 
@@ -199,6 +206,7 @@ def main():
     cfg = model.cfg
     sample_length = 0
     pipeline = cfg.data.test.pipeline
+    print(pipeline)
     pipeline_ = pipeline.copy()
     for step in pipeline:
         if 'SampleFrames' in step['type']:
@@ -213,6 +221,7 @@ def main():
 
     assert sample_length > 0
 
+    print(sample_length)
     try:
         frame_queue = deque(maxlen=sample_length)
         result_queue = deque(maxlen=1)

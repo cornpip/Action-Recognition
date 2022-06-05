@@ -105,12 +105,11 @@ venv.bak/
 .mypy_cache/
 
 # custom
-#/data
 .vscode
 .idea
-*.pkl
-*.pkl.json
-*.log.json
+#*.pkl
+#*.pkl.json
+#*.log.json
 benchlist.txt
 work_dirs/
 
@@ -138,3 +137,5 @@ mmaction/tools/*
 # unignore ipython notebook files in demo
 !demo/*.ipynb
 mmaction/.mim
+
+plus/yap.py

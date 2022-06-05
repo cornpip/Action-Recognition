@@ -102,6 +102,23 @@ def parse_args():
     return args
 
 
+def cam_extraction(short_side):
+    vid = cv2.videoCapture(0, cv2.CAP_DSHOW)
+    frames = []
+    flag, frame = vid.read()
+    cnt = 0
+    new_h, new_w = None, None
+    while flag:
+        if new_h is None:
+            h, w, _ = frame.shape
+            new_w, new_h = mmcv.rescale_size((w, h), (short_side, np.Inf))
+
+        frame = mmcv.imresize(frame, (new_w, new_h))
+
+        frames.append(frame)
+        flag, frame = vid.read()
+    return frames
+
 def frame_extraction(video_path, short_side):
     """Extract frames given video_path.
 
@@ -109,10 +126,13 @@ def frame_extraction(video_path, short_side):
         video_path (str): The video_path.
     """
     # Load the video, extract frames into ./tmp/video_name
+    print("-------------", video_path)
     target_dir = osp.join('./tmp', osp.basename(osp.splitext(video_path)[0]))
+    print("--------------", target_dir)
     os.makedirs(target_dir, exist_ok=True)
     # Should be able to handle videos up to several hours
     frame_tmpl = osp.join(target_dir, 'img_{:06d}.jpg')
+    print("----------------", frame_tmpl)
     vid = cv2.VideoCapture(video_path)
     frames = []
     frame_paths = []
@@ -133,9 +153,23 @@ def frame_extraction(video_path, short_side):
         cv2.imwrite(frame_path, frame)
         cnt += 1
         flag, frame = vid.read()
-
     return frame_paths, frames
 
+
+def cam_detection(args, frames):
+    model = init_detector(args.det_config, args.det_checkpoint, args.device)
+    assert model.CLASSES[0] == 'person', ('We require you to use a detector '
+                                          'trained on COCO')
+    results = []
+    print('Performing Human Detection for each frame')
+    prog_bar = mmcv.ProgressBar(len(frames))
+    for frame in frames:
+        result = inference_detector(model, frame)
+        # We only keep human detections with score larger than det_score_thr
+        result = result[0][result[0][:, 4] >= args.det_score_thr]
+        results.append(result)
+        prog_bar.update()
+    return results
 
 def detection_inference(args, frame_paths):
     """Detect human boxes given frame paths.
@@ -161,6 +195,20 @@ def detection_inference(args, frame_paths):
         prog_bar.update()
     return results
 
+def cam_pose(args, frames, det_results):
+    model = init_pose_model(args.pose_config, args.pose_checkpoint,
+                            args.device)
+    ret = []
+    print('Performing Human Pose Estimation for each frame')
+    prog_bar = mmcv.ProgressBar(len(frames))
+    for f, d in zip(frames, det_results):
+        # Align input format
+        d = [dict(bbox=x) for x in list(d)]
+        pose = inference_top_down_pose_model(model, f, d, format='xyxy')[0]
+        ret.append(pose)
+        prog_bar.update()
+    return ret
+
 
 def pose_inference(args, frame_paths, det_results):
     model = init_pose_model(args.pose_config, args.pose_checkpoint,
@@ -183,6 +231,8 @@ def main():
     frame_paths, original_frames = frame_extraction(args.video,
                                                     args.short_side)
     num_frame = len(frame_paths)
+    # num_frame = 500
+    print("------------",num_frame)
     h, w, _ = original_frames[0].shape
 
     # Get clip_len, frame_interval and calculate center index of each clip
@@ -229,6 +279,7 @@ def main():
     fake_anno['keypoint_score'] = keypoint_score
 
     results = inference_recognizer(model, fake_anno)
+    print("!!!!!!!!!!!!!!!!!!",results)
 
     action_label = label_map[results[0][0]]
 
@@ -238,12 +289,20 @@ def main():
         vis_pose_result(pose_model, frame_paths[i], pose_results[i])
         for i in range(num_frame)
     ]
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(args.out_filename, fourcc, 24, (w,h))
     for frame in vis_frames:
         cv2.putText(frame, action_label, (10, 30), FONTFACE, FONTSCALE,
                     FONTCOLOR, THICKNESS, LINETYPE)
+        out.write(frame)
+    out.release()
 
-    vid = mpy.ImageSequenceClip([x[:, :, ::-1] for x in vis_frames], fps=24)
-    vid.write_videofile(args.out_filename, remove_temp=True)
+    # print([x[:, :, ::-1] for x in vis_frames])
+    # print(type(vis_frames))
+    # print(type(vis_frames[0]))
+    # print(vis_frames[0].shape)
+    # vid = mpy.ImageSequenceClip([x[:, :, ::-1] for x in vis_frames], fps=24)
+    # vid.write_videofile(args.out_filename, remove_temp=True)
 
     tmp_frame_dir = osp.dirname(frame_paths[0])
     shutil.rmtree(tmp_frame_dir)

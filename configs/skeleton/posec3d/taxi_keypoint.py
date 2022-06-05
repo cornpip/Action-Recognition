@@ -24,7 +24,7 @@ model = dict(
     train_cfg=dict(),
     test_cfg=dict(average_clips='prob'))
 
-# gpu_ids = range(1) # range(1)이 (0,1) 반환한다. --gpu-ids 0 해도 err날 때 고려
+gpu_ids = range(1) # range(1)이 (0,1) 반환한다. 이 부분 test.py 에서 gpu_ids err나서 넣어준거
 dataset_type = 'PoseDataset'
 ann_file_train = 'data/posec3d/test_dataset_train.pkl' # 수정
 ann_file_val = 'data/posec3d/test_dataset_val.pkl' # 수정
