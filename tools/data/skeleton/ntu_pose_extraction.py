@@ -27,8 +27,8 @@ except (ImportError, ModuleNotFoundError):
                       'required in this script! ')
 
 # ----------------------------------------- 수정
-mmdet_root = '/content/mmdetection'
-mmpose_root = '/content/mmpose'
+mmdet_root = 'C:\\Users\\choi\\PycharmProjects\\total-action\\mmdetection'
+mmpose_root = "C:\\Users\\choi\\PycharmProjects\\total-action\\mmpose"
 # ------------------------------------------------------
 args = abc.abstractproperty()
 args.det_config = f'{mmdet_root}/configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco-person.py'  # noqa: E501

@@ -179,8 +179,14 @@ def main():
     test = 0
     while True:
         if len(frames) >= num_frame * 3:
-            alpha += 10
-            print(alpha)
+            if alpha <= num_frame * 3:
+                print("alpha up")
+                alpha += 10
+            else:
+                frames = frames[len(frames)-num_frame:] # 미확인
+                print("alpha set")
+                alpha = int(num_frame/2)
+            print(f"now alpha = {alpha}")
         if len(frames) >= num_frame:
             frames_c = frames[:num_frame]
             frames = frames[num_frame+alpha:]

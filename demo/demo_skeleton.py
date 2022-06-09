@@ -290,7 +290,7 @@ def main():
         for i in range(num_frame)
     ]
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(args.out_filename, fourcc, 24, (w,h))
+    out = cv2.VideoWriter(args.out_filename, fourcc, 30, (w,h))
     for frame in vis_frames:
         cv2.putText(frame, action_label, (10, 30), FONTFACE, FONTSCALE,
                     FONTCOLOR, THICKNESS, LINETYPE)
