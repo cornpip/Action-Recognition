@@ -7,6 +7,7 @@ from collections import deque
 import time
 import argparse
 from threading import Thread
+import server as socket
 
 import cv2
 import mmcv
@@ -114,11 +115,14 @@ def cam_start(short_side, FPS):
         new_h, new_w = None, None
         if (flag is True) and current_time > 1. / FPS:
             prev_time = time.time()
-            if new_h is None:
-                h, w, _ = frame.shape
-                new_w, new_h = mmcv.rescale_size((w, h), (short_side, np.Inf))
-
-            frame = mmcv.imresize(frame, (new_w, new_h))
+            # if new_h is None:
+            #     h, w, _ = frame.shape
+            #     new_w, new_h = mmcv.rescale_size((w, h), (short_side, np.Inf))
+            #
+            # frame = mmcv.imresize(frame, (new_w, new_h))
+            # mmcv resize 안써도 무관해보인다.
+            # 보내는 쪽 형식이 고정이 아니라면 필요할 듯
+            # 처음에 frame 규격 model인자로 쓰니까
 
             frames.append(frame)
             if len(frames) % 10 == 0:
@@ -154,15 +158,22 @@ def pose_inference(args, frames, det_results):
     return ret
 
 def main():
-    global frames
-    frames = []
+    # global frames
+    # frames = []
+    # frame은 server.py 에 변수로
 
     args = parse_args()
-    cam = Thread(target=cam_start, args=[args.short_side, 7], daemon=True)
-    cam.start()
-    time.sleep(2)
+    # cam = Thread(target=cam_start, args=[args.short_side, 7], daemon=True)
+    #FPS설정
+    # cam.start()
+    # time.sleep(2)
+    server = socket.ServerSocket('localhost', 8080)
+    while 1:
+        time.sleep(0.2)
+        if len(socket.frames) > 5:
+            break
 
-    h, w, _ = frames[0].shape
+    h, w, _ = socket.frames[0].shape
 
     config = mmcv.Config.fromfile(args.config)
     config.merge_from_dict(args.cfg_options)
@@ -178,18 +189,20 @@ def main():
     alpha = int(num_frame/2)
     test = 0
     while True:
-        if len(frames) >= num_frame * 3:
+        if socket.frames and len(socket.frames) % 10 == 0:
+            print(f" |stack = {len(socket.frames)}")
+        if len(socket.frames) >= num_frame * 3:
             if alpha <= num_frame * 3:
                 print("alpha up")
                 alpha += 10
             else:
-                frames = frames[len(frames)-num_frame:] # 미확인
+                socket.frames = socket.frames[len(socket.frames)-num_frame:] # 미확인
                 print("alpha set")
                 alpha = int(num_frame/2)
             print(f"now alpha = {alpha}")
-        if len(frames) >= num_frame:
-            frames_c = frames[:num_frame]
-            frames = frames[num_frame+alpha:]
+        if len(socket.frames) >= num_frame:
+            frames_c = socket.frames[:num_frame]
+            socket.frames = socket.frames[num_frame+alpha:]
 
             det_results = detection_inference(args, frames_c)
             torch.cuda.empty_cache()
