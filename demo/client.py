@@ -43,8 +43,6 @@ class ClientSocket:
                 if (ret is True) and current_time > 1./FPS:
                     # resize_frame = cv2.resize(frame, dsize=(640, 480), interpolation=cv2.INTER_AREA)
                     prev_time = time.time()
-                    now = time.localtime()
-                    print(now)
                     stime = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 
                     encode_param=[int(cv2.IMWRITE_JPEG_QUALITY),90]
@@ -54,8 +52,15 @@ class ClientSocket:
                     length = str(len(stringData))
                     self.sock.sendall(length.encode('utf-8').ljust(64))
                     self.sock.send(stringData)
-                    self.sock.send(stime.encode('utf-8').ljust(64))
-                    print(u'send images %d'%(cnt))
+                    # self.sock.send(stime.encode('utf-8').ljust(64))
+                    Timing = self.sock.recv(1).decode('utf-8')
+                    if Timing == "1":
+                        # common-0.984 charge-0.009 conflict-0.007 이 format 고정이므로
+                        # buffer 크기 40으로 고정
+                        inference_res = self.sock.recv(40).decode('utf-8')
+                        print(inference_res)
+                    if cnt % 50 == 0:
+                        print('send images %d' %(cnt))
                     cnt+=1
         except Exception as e:
             print(e)
@@ -64,9 +69,17 @@ class ClientSocket:
             self.connectServer()
             self.sendImages()
 
+    def recvall(self, sock, count):
+        buf = b''
+        while count:
+            newbuf = sock.recv(count)
+            if not newbuf: return None
+            buf += newbuf
+            count -= len(newbuf)
+        return buf
 def main():
-    TCP_IP = 'localhost'
-    TCP_PORT = 8080
+    TCP_IP = '118.223.255.68'
+    TCP_PORT = 8001
     client = ClientSocket(TCP_IP, TCP_PORT)
 
 if __name__ == "__main__":

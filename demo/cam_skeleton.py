@@ -167,7 +167,7 @@ def main():
     #FPS설정
     # cam.start()
     # time.sleep(2)
-    server = socket.ServerSocket('localhost', 8080)
+    server = socket.ServerSocket('192.168.40.21', 8080)
     while 1:
         time.sleep(0.2)
         if len(socket.frames) > 5:
@@ -189,9 +189,8 @@ def main():
     alpha = int(num_frame/2)
     test = 0
     while True:
-        if socket.frames and len(socket.frames) % 10 == 0:
-            print(f" |stack = {len(socket.frames)}")
         if len(socket.frames) >= num_frame * 3:
+            print(f" |stack-over = {len(socket.frames)}")
             if alpha <= num_frame * 3:
                 print("alpha up")
                 alpha += 10
@@ -201,6 +200,7 @@ def main():
                 alpha = int(num_frame/2)
             print(f"now alpha = {alpha}")
         if len(socket.frames) >= num_frame:
+            print(f" |stack-now = {len(socket.frames)}")
             frames_c = socket.frames[:num_frame]
             socket.frames = socket.frames[num_frame+alpha:]
 
@@ -234,10 +234,19 @@ def main():
             fake_anno['keypoint_score'] = keypoint_score
 
             results = inference_recognizer(model, fake_anno)
-            print("!!!!!!!!!!!!!!!!!!", results)
+            print("\n original result: ", results)
+            s_msg = ""
+            for result in results:
+                act = f"{label_map[result[0]]}-{result[1]:.3f} "
+                s_msg += act
+            print(s_msg)
+            s_msg = s_msg.encode('utf-8')
+            socket.Timing = "1"
+            socket.s_msg += s_msg
 
             action_label = label_map[results[0][0]]
 
+            # 여기부터 저장용 영상
             pose_model = init_pose_model(args.pose_config, args.pose_checkpoint,
                                          args.device)
             vis_frames = [
@@ -245,7 +254,7 @@ def main():
                 for i in range(num_frame)
             ]
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(args.out_filename+f"/{test}.mp4", fourcc, 24, (w, h))
+            out = cv2.VideoWriter(args.out_filename+f"/{test}.mp4", fourcc, 18, (w, h))
             # 캠 fps를 7로 맞춰서 받고있기에 48개는 거의 7초짜리지
             for frame in vis_frames:
                 cv2.putText(frame, action_label, (10, 30), FONTFACE, FONTSCALE,
