@@ -186,7 +186,7 @@ def main():
     label_map = [x.strip() for x in open(args.label_map).readlines()]
 
     num_frame = 30
-    alpha = int(num_frame/2)
+    alpha = int(num_frame)
     test = 0
     while True:
         if len(socket.frames) >= num_frame * 3:
@@ -234,15 +234,21 @@ def main():
             fake_anno['keypoint_score'] = keypoint_score
 
             results = inference_recognizer(model, fake_anno)
-            print("\n original result: ", results)
+            # print("\n original result: ", results)
             s_msg = ""
             for result in results:
                 act = f"{label_map[result[0]]}-{result[1]:.3f} "
                 s_msg += act
-            print(s_msg, f"video num: {test}")
-            s_msg = s_msg.encode('utf-8')
-            socket.Timing = "1"
-            socket.s_msg += s_msg
+            print(f"\n| {s_msg} | video num: {test}")
+            if not socket.frames:
+                print("| Initialize due to connection termination")
+                # 1) 처리 진행 중 close했다가 연결하면 초기화 적용안됨
+                # 2) 여기 조건을 지나치자 마자 연결이 끊겼다면 초기화 적용안됨
+                continue
+            else:
+                s_msg = s_msg.encode('utf-8')
+                socket.Timing = "1"
+                socket.s_msg += s_msg
 
             action_label = label_map[results[0][0]]
 
@@ -261,7 +267,11 @@ def main():
                             FONTCOLOR, THICKNESS, LINETYPE)
                 out.write(frame)
             out.release()
-            test += 1
+            if test == 50:
+                print(" | test=0 초기화 ")
+                test = 0
+            else:
+                test += 1
 
             if cv2.waitKey(1) > 0:
                 break

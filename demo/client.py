@@ -5,7 +5,7 @@ import socket
 import cv2
 import numpy
 import base64
-from GPS import gps_u
+# from GPS import gps_u
 
 class ClientSocket:
     def __init__(self, ip, port):

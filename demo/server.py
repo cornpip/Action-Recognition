@@ -62,7 +62,7 @@ class ServerSocket:
             print(e)
             self.socketClose()
             cv2.destroyAllWindows()
-            frames = []
+            frames = [] # 연결끊을시 프레임 비우기
             self.socketOpen()
             self.receiveThread = threading.Thread(target=self.receiveImages)
             self.receiveThread.start()
