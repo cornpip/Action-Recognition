@@ -239,7 +239,7 @@ def main():
             for result in results:
                 act = f"{label_map[result[0]]}-{result[1]:.3f} "
                 s_msg += act
-            print(s_msg)
+            print(s_msg, f"video num: {test}")
             s_msg = s_msg.encode('utf-8')
             socket.Timing = "1"
             socket.s_msg += s_msg

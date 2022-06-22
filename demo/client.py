@@ -5,6 +5,7 @@ import socket
 import cv2
 import numpy
 import base64
+from GPS import gps_u
 
 class ClientSocket:
     def __init__(self, ip, port):
@@ -33,7 +34,7 @@ class ClientSocket:
         FPS = 7
         cnt = 0
         prev_time = 0
-        capture = cv2.VideoCapture(0)
+        capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         try:
@@ -59,6 +60,11 @@ class ClientSocket:
                         # buffer 크기 40으로 고정
                         inference_res = self.sock.recv(40).decode('utf-8')
                         print(inference_res)
+                        inference_res = inference_res.split(' ')[:-1]
+                        f_data = inference_res[0].split('-')
+                        if (f_data[0] == "conflict" and float(f_data[1]) >= 0.2):
+                            print("-----Dangerous-----")
+                            #gps_u.get_locate()
                     if cnt % 50 == 0:
                         print('send images %d' %(cnt))
                     cnt+=1

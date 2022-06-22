@@ -4,7 +4,8 @@ port = "/dev/serial0"
 
 def parseGPS(data):
 #    print "raw:", data #prints raw data
-    if data[0:6] == "$GPRMC":
+    if data[0:6] == b"$GPRMC":
+        data = data.decode('utf-8')
         sdata = data.split(",")
         if sdata[2] == 'V':
             print("no satellite data available")
