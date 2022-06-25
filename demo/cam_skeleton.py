@@ -188,21 +188,29 @@ def main():
     num_frame = 30
     alpha = int(num_frame)
     test = 0
+    # 처리속도가 객체가 많을 수록, 많이 움직일 수록 느려지는 것 같다.
+    # 환경에서 테스트해봐야 적절한 조정치 alpha를 잡을 수 있을 듯 하다.
+    # 일단 상황에 따라 처리속도가 변하므로 up/down이 적절히 필요함
     while True:
         if len(socket.frames) >= num_frame * 3:
             print(f" |stack-over = {len(socket.frames)}")
             if alpha <= num_frame * 3:
-                print("alpha up")
-                alpha += 10
+                print(" |alpha up")
+                alpha += 5
             else:
                 socket.frames = socket.frames[len(socket.frames)-num_frame:] # 미확인
-                print("alpha set")
+                print(" |alpha set")
                 alpha = int(num_frame/2)
-            print(f"now alpha = {alpha}")
+            print(f" |now alpha = {alpha}")
         if len(socket.frames) >= num_frame:
             print(f" |stack-now = {len(socket.frames)}")
             frames_c = socket.frames[:num_frame]
             socket.frames = socket.frames[num_frame+alpha:]
+
+            if len(socket.frames) <= 5: # 현재 stack=60초반
+                print(" |alpha down")
+                alpha -= 5
+                print(f" |now alpha = {alpha}")
 
             det_results = detection_inference(args, frames_c)
             torch.cuda.empty_cache()
