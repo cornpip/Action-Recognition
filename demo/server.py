@@ -11,6 +11,9 @@ import base64
 frames = []
 Timing = "0"
 s_msg = b""
+frame_limit = 30
+alpha = int(frame_limit)
+
 class ServerSocket:
     def __init__(self, ip, port):
         self.TCP_IP = ip
@@ -32,7 +35,7 @@ class ServerSocket:
         print(u'Server socket [ TCP_IP: ' + self.TCP_IP + ', TCP_PORT: ' + str(self.TCP_PORT) + ' ] is connected with client')
 
     def receiveImages(self):
-        global frames, Timing, s_msg
+        global frames, Timing, s_msg, alpha
 
         try:
             while True:
@@ -63,6 +66,7 @@ class ServerSocket:
             self.socketClose()
             cv2.destroyAllWindows()
             frames = [] # 연결끊을시 프레임 비우기
+            alpha = frame_limit # alpha 초기화
             self.socketOpen()
             self.receiveThread = threading.Thread(target=self.receiveImages)
             self.receiveThread.start()

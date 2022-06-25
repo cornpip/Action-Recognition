@@ -185,8 +185,7 @@ def main():
     model = init_recognizer(config, args.checkpoint, args.device)
     label_map = [x.strip() for x in open(args.label_map).readlines()]
 
-    num_frame = 30
-    alpha = int(num_frame)
+    num_frame = socket.frame_limit
     test = 0
     # 처리속도가 객체가 많을 수록, 많이 움직일 수록 느려지는 것 같다.
     # 환경에서 테스트해봐야 적절한 조정치 alpha를 잡을 수 있을 듯 하다.
@@ -194,23 +193,23 @@ def main():
     while True:
         if len(socket.frames) >= num_frame * 3:
             print(f" |stack-over = {len(socket.frames)}")
-            if alpha <= num_frame * 3:
+            if socket.alpha <= num_frame * 3:
                 print(" |alpha up")
-                alpha += 5
+                socket.alpha += 5
             else:
                 socket.frames = socket.frames[len(socket.frames)-num_frame:] # 미확인
-                print(" |alpha set")
-                alpha = int(num_frame/2)
-            print(f" |now alpha = {alpha}")
+                print(" |alpha set cause too big")
+                socket.alpha = int(num_frame)
+            print(f" |now alpha = {socket.alpha}")
         if len(socket.frames) >= num_frame:
             print(f" |stack-now = {len(socket.frames)}")
             frames_c = socket.frames[:num_frame]
-            socket.frames = socket.frames[num_frame+alpha:]
+            socket.frames = socket.frames[num_frame+socket.alpha:]
 
-            if len(socket.frames) <= 5: # 현재 stack=60초반
+            if len(socket.frames) <= 5 and socket.alpha > 5:
                 print(" |alpha down")
-                alpha -= 5
-                print(f" |now alpha = {alpha}")
+                socket.alpha -= 5
+                print(f" |now alpha = {socket.alpha}")
 
             det_results = detection_inference(args, frames_c)
             torch.cuda.empty_cache()
