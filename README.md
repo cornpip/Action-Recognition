@@ -58,9 +58,9 @@ __cam_skeleton__ 은 지정한 frame수에 도달하면 해당 frame수에 대�
 전처리와 추론의 속도는 프로젝트에 중요한 기준입니다.  
 처리 속도가 빠를수록 버려지는 frame수가 적어 정확한 감지를 할 수 있고 폭행 상황에 대한 대처도 빨라집니다. 처리 속도는 객체가 많을 수록 행동이 역동적일수록 느려집니다. 상황에 따라 처리속도가 변하기 때문에 버려지는 frame수에 대한 적절한 증가/감소가 필요합니다. 해당 증감은 서버의 __alpha__, __frames__ 변수로 다룰 수 있으므로 GPU성능과 사용 환경에 따라 적절한 값으로 수정할 수 있습니다.
 
-### +)
-[대한임베디드공학회 ict대학생 논문경진대회 제출 논문](https://drive.google.com/file/d/1vd5vM4-wfGYxobYWNlYLCwKDV_Oa8xU-/view?usp=sharing)  
-[캡스톤디자인 경진대회 참여 포스터](https://docs.google.com/presentation/d/1bpxRl3pi8Qdm9mtQOApYPJharchJ7V_Y/edit?usp=sharing&ouid=109716382236660184193&rtpof=true&sd=true) _(A1 사이즈 ppt라 로딩시간이 있습니다.)_
+## Links
+#### [대한임베디드공학회 ict대학생 논문경진대회 제출 논문](https://drive.google.com/file/d/1vd5vM4-wfGYxobYWNlYLCwKDV_Oa8xU-/view?usp=sharing)  
+#### [캡스톤디자인 경진대회 참여 포스터](https://docs.google.com/presentation/d/1bpxRl3pi8Qdm9mtQOApYPJharchJ7V_Y/edit?usp=sharing&ouid=109716382236660184193&rtpof=true&sd=true) _(A1 사이즈 ppt라 로딩시간이 있습니다.)_
 
 ## Introduction
 [mmaction2 repository](https://github.com/open-mmlab/mmaction2)
