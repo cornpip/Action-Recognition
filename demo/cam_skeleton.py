@@ -45,9 +45,8 @@ LINETYPE = 1
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='MMAction2 demo')
-    parser.add_argument('video', help='video file/url')
-    parser.add_argument('out_filename', help='output filename')
+    parser = argparse.ArgumentParser(description='detection of violent behavior')
+    parser.add_argument('out', help='out_video_path')
     parser.add_argument(
         '--config',
         default=('configs/skeleton/posec3d/'
@@ -267,7 +266,7 @@ def main():
                 for i in range(num_frame)
             ]
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(args.out_filename+f"/{test}.mp4", fourcc, 18, (w, h))
+            out = cv2.VideoWriter(args.out+f"/{test}.mp4", fourcc, 18, (w, h))
             # 캠 fps를 7로 맞춰서 받고있기에 48개는 거의 7초짜리지
             for frame in vis_frames:
                 cv2.putText(frame, action_label, (10, 30), FONTFACE, FONTSCALE,
