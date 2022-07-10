@@ -1,7 +1,7 @@
-## 운전자 폭행 감지 및 위치기반 신고 시스템  
+# 운전자 폭행 감지 및 위치기반 신고 시스템  
 #### 시스템에 대한 repo입니다 => [stop](https://github.com/cornpip/stop)
 
-### dataset준비 및 모델학습
+## dataset준비 및 모델학습
 폭행 행동을 감지하기위해 mmaction2 Tool을 이용해 skeleton기반의 action-recognition인 PoseC3D를 활용합니다.
 
 <img src="https://user-images.githubusercontent.com/74674780/178137650-09a3ab70-57f7-4f1d-8c27-f0971da147ac.jpg">  
@@ -29,7 +29,7 @@
 <img src="https://user-images.githubusercontent.com/74674780/178139325-4d6532af-8ab3-4e8c-8049-53444ee5e52e.png">  
 (왼쪽 상단에 추론 결과)  
 
-### 실시간 운전자 폭행 탐지를 위한 서버
+## 실시간 운전자 폭행 탐지를 위한 서버
 
 [__cam_skeleton__](https://github.com/cornpip/mmaction2/blob/master/demo/cam_skeleton.py) |  [__server_socket__](https://github.com/cornpip/mmaction2/blob/master/demo/server.py)  
 cam_skeleton에 적절한 인자를 넣고 실행하여 socket연결을 대기합니다.  
