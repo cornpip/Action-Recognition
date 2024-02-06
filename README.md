@@ -1,10 +1,17 @@
 # 운전자 폭행 감지 및 위치기반 신고 시스템  
-#### 시스템에 대한 repo입니다 => [stop](https://github.com/cornpip/stop)
+## 구조
+<img src="https://user-images.githubusercontent.com/74674780/178137022-1b64682c-4ed6-48d6-9c39-05b08b2503c0.PNG" width=700>
+
+시스템의 흐름은 다음과 같습니다. 추론에는 gpu가 필요하므로 추론 서버를 분리합니다. Raspberry Pi에서 [__추론 서버에 socket 연결__](https://github.com/cornpip/stop/blob/main/pyprocess/client.py) 을 한 후 이미지를 전송합니다. 서버는 들어온 이미지를 정해진 프레임 단위로 추론을 진행하고 결과를 반환합니다. 결과가 폭행 상황일시 Pi와 연결된 GPS모듈로 부터 [__현재 위도/경도__](https://github.com/cornpip/stop/blob/main/pyprocess/gps_u.py) 를 받아오고 부모 프로세서인 [__node process__](https://github.com/cornpip/stop/blob/main/index.js) 에 전달합니다. node procecss는 준비된 csv파일로 부터 경찰서의 위도/경도를 비교하고 [__가장 가까운 경찰서를 반환__](https://github.com/cornpip/stop/blob/main/track/shortcut.js)합니다.  
+
+<img src="https://user-images.githubusercontent.com/74674780/178142558-f2243126-3d77-4532-a851-a83ddc6ca5b1.jpg" width=700> 
+
+네이버의 Simple & Easy Notification Service를 이용합니다. 사용 가이드에 따라 Signature를 생성하고 api를 호출합니다.    
 
 ## dataset준비 및 모델학습
 폭행 행동을 감지하기위해 mmaction2 Tool을 이용해 skeleton기반의 action-recognition인 PoseC3D를 활용합니다.
 
-<img src="https://user-images.githubusercontent.com/74674780/178137650-09a3ab70-57f7-4f1d-8c27-f0971da147ac.jpg">  
+<img src="https://user-images.githubusercontent.com/74674780/178137650-09a3ab70-57f7-4f1d-8c27-f0971da147ac.jpg" width=600>
 
 위의 사진처럼 앞좌석 좌측에 하나 정면에 하나를 촬영 구도로 학습 데이터를 촬영합니다. 학습은 3가지 라벨로 진행합니다.  
 
@@ -13,7 +20,7 @@
 |351|452|71|
 숫자는 학습한 영상의 수로 개당 3초 정도 길이의 영상입니다.
 
-<img src="https://user-images.githubusercontent.com/74674780/178137612-0c77b2d0-6cd8-482c-8c20-70bc1c04895d.PNG">
+<img src="https://user-images.githubusercontent.com/74674780/178137612-0c77b2d0-6cd8-482c-8c20-70bc1c04895d.PNG" width=700>
 
 학습은 위와 같은 순서로 진행됩니다.   
 학습의 전처리로 각각의 영상에 객체탐지(Faster-RCNN)와 Pose-Estimation(HRNET) 작업 후 Pose의 keypoint를 pkl파일로 [__변환__](https://github.com/cornpip/mmaction2/blob/master/tools/data/skeleton/ntu_pose_extraction.py) 이 필요합니다. 각각의 영상에 대한 얻은 pkl파일을 하나의 pkl로 만들어야 합니다. => [__format_extracted__](https://github.com/cornpip/mmaction2/blob/master/tools/data/skeleton/format_extracted.py)  
@@ -27,7 +34,9 @@
 <img src="https://user-images.githubusercontent.com/74674780/178139158-5cb83f5e-c9ad-4a35-94a0-bdfa84727cfe.PNG">  
 <img src="https://user-images.githubusercontent.com/74674780/178139259-b4d336b5-8c96-4b1e-8f5e-a1bb0b70c801.png">
 <img src="https://user-images.githubusercontent.com/74674780/178139325-4d6532af-8ab3-4e8c-8049-53444ee5e52e.png">  
-(왼쪽 상단에 추론 결과)  
+<img src="https://github.com/cornpip/Action-Recognition/assets/74674780/057db13c-f352-4251-9fea-76e578099e27" width=600 />
+
+왼쪽 상단에 추론 결과를 확인할 수 있습니다.
 
 ## 실시간 운전자 폭행 탐지를 위한 서버
 
@@ -58,173 +67,12 @@ __cam_skeleton__ 은 지정한 frame수에 도달하면 해당 frame수에 대�
 전처리와 추론의 속도는 프로젝트에 중요한 기준입니다.  
 처리 속도가 빠를수록 버려지는 frame수가 적어 정확한 감지를 할 수 있고 폭행 상황에 대한 대처도 빨라집니다. 처리 속도는 객체가 많을 수록 행동이 역동적일수록 느려집니다. 상황에 따라 처리속도가 변하기 때문에 버려지는 frame수에 대한 적절한 증가/감소가 필요합니다. 해당 증감은 서버의 __alpha__, __frames__ 변수로 다룰 수 있으므로 GPU성능과 사용 환경에 따라 적절한 값으로 수정할 수 있습니다.
 
+## 라즈베리파이 구성
+<img src="https://github.com/cornpip/Action-Recognition/assets/74674780/b2e385fb-0ea5-4db3-a594-9c396e1b98aa" width=400 />
+
+
 ## Links
 #### [대한임베디드공학회 ict대학생 논문경진대회 제출 논문](https://drive.google.com/file/d/1vd5vM4-wfGYxobYWNlYLCwKDV_Oa8xU-/view?usp=sharing)  
-#### [캡스톤디자인 경진대회 참여 포스터](https://docs.google.com/presentation/d/1bpxRl3pi8Qdm9mtQOApYPJharchJ7V_Y/edit?usp=sharing&ouid=109716382236660184193&rtpof=true&sd=true)   
-_(로딩이 있을 수 있습니다)_
-
-## Introduction
-[mmaction2 repository](https://github.com/open-mmlab/mmaction2)
-
-## Supported Methods
-
-<table style="margin-left:auto;margin-right:auto;font-size:1.3vw;padding:3px 5px;text-align:center;vertical-align:center;">
-  <tr>
-    <td colspan="5" style="font-weight:bold;">Action Recognition</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/c3d/README.md">C3D</a> (CVPR'2014)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/tsn/README.md">TSN</a> (ECCV'2016)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/i3d/README.md">I3D</a> (CVPR'2017)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/i3d/README.md">I3D Non-Local</a> (CVPR'2018)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/r2plus1d/README.md">R(2+1)D</a> (CVPR'2018)</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/trn/README.md">TRN</a> (ECCV'2018)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/tsm/README.md">TSM</a> (ICCV'2019)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/tsm/README.md">TSM Non-Local</a> (ICCV'2019)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/slowonly/README.md">SlowOnly</a> (ICCV'2019)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/slowfast/README.md">SlowFast</a> (ICCV'2019)</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/csn/README.md">CSN</a> (ICCV'2019)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/tin/README.md">TIN</a> (AAAI'2020)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/tpn/README.md">TPN</a> (CVPR'2020)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/x3d/README.md">X3D</a> (CVPR'2020)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/omnisource/README.md">OmniSource</a> (ECCV'2020)</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition_audio/resnet/README.md">MultiModality: Audio</a> (ArXiv'2020)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/tanet/README.md">TANet</a> (ArXiv'2020)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/timesformer/README.md">TimeSformer</a> (ICML'2021)</td>
-    <td></td>
-    <td></td>
-  </tr>
-  <tr>
-    <td colspan="5" style="font-weight:bold;">Action Localization</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/localization/ssn/README.md">SSN</a> (ICCV'2017)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/localization/bsn/README.md">BSN</a> (ECCV'2018)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/localization/bmn/README.md">BMN</a> (ICCV'2019)</td>
-    <td></td>
-    <td></td>
-  </tr>
-  <tr>
-    <td colspan="5" style="font-weight:bold;">Spatio-Temporal Action Detection</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/detection/acrn/README.md">ACRN</a> (ECCV'2018)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/detection/ava/README.md">SlowOnly+Fast R-CNN</a> (ICCV'2019)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/detection/ava/README.md">SlowFast+Fast R-CNN</a> (ICCV'2019)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/detection/lfb/README.md">LFB</a> (CVPR'2019)</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td colspan="5" style="font-weight:bold;">Skeleton-based Action Recognition</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/skeleton/stgcn/README.md">ST-GCN</a> (AAAI'2018)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/skeleton/2s-agcn/README.md">2s-AGCN</a> (CVPR'2019)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/configs/skeleton/posec3d/README.md">PoseC3D</a> (ArXiv'2021)</td>
-    <td></td>
-    <td></td>
-  </tr>
-</table>
-위와 같은 action-recognition 모델의 메서드를 사용할 수 있습니다.
-
-## Supported Datasets
-
-<table style="margin-left:auto;margin-right:auto;font-size:1.3vw;padding:3px 5px;text-align:center;vertical-align:center;">
-  <tr>
-    <td colspan="4" style="font-weight:bold;">Action Recognition</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/hmdb51/README.md">HMDB51</a> (<a href="https://serre-lab.clps.brown.edu/resource/hmdb-a-large-human-motion-database/">Homepage</a>) (ICCV'2011)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/ucf101/README.md">UCF101</a> (<a href="https://www.crcv.ucf.edu/research/data-sets/ucf101/">Homepage</a>) (CRCV-IR-12-01)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/activitynet/README.md">ActivityNet</a> (<a href="http://activity-net.org/">Homepage</a>) (CVPR'2015)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/kinetics/README.md">Kinetics-[400/600/700]</a> (<a href="https://deepmind.com/research/open-source/kinetics/">Homepage</a>) (CVPR'2017)</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/sthv1/README.md">SthV1</a> (<a href="https://20bn.com/datasets/something-something/v1/">Homepage</a>) (ICCV'2017)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/sthv2/README.md">SthV2</a> (<a href="https://20bn.com/datasets/something-something/">Homepage</a>) (ICCV'2017)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/diving48/README.md">Diving48</a> (<a href="http://www.svcl.ucsd.edu/projects/resound/dataset.html">Homepage</a>) (ECCV'2018)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/jester/README.md">Jester</a> (<a href="https://20bn.com/datasets/jester/v1">Homepage</a>) (ICCV'2019)</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/mit/README.md">Moments in Time</a> (<a href="http://moments.csail.mit.edu/">Homepage</a>) (TPAMI'2019)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/mmit/README.md">Multi-Moments in Time</a> (<a href="http://moments.csail.mit.edu/challenge_iccv_2019.html">Homepage</a>) (ArXiv'2019)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/hvu/README.md">HVU</a> (<a href="https://github.com/holistic-video-understanding/HVU-Dataset">Homepage</a>) (ECCV'2020)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/omnisource/README.md">OmniSource</a> (<a href="https://kennymckormick.github.io/omnisource/">Homepage</a>) (ECCV'2020)</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/gym/README.md">FineGYM</a> (<a href="https://sdolivia.github.io/FineGym/">Homepage</a>) (CVPR'2020)</td>
-    <td></td>
-    <td></td>
-    <td></td>
-  </tr>
-  <tr>
-    <td colspan="4" style="font-weight:bold;">Action Localization</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/thumos14/README.md">THUMOS14</a> (<a href="https://www.crcv.ucf.edu/THUMOS14/download.html">Homepage</a>) (THUMOS Challenge 2014)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/activitynet/README.md">ActivityNet</a> (<a href="http://activity-net.org/">Homepage</a>) (CVPR'2015)</td>
-    <td></td>
-    <td></td>
-  </tr>
-  <tr>
-    <td colspan="4" style="font-weight:bold;">Spatio-Temporal Action Detection</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/ucf101_24/README.md">UCF101-24*</a> (<a href="http://www.thumos.info/download.html">Homepage</a>) (CRCV-IR-12-01)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/jhmdb/README.md">JHMDB*</a> (<a href="http://jhmdb.is.tue.mpg.de/">Homepage</a>) (ICCV'2015)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/ava/README.md">AVA</a> (<a href="https://research.google.com/ava/index.html">Homepage</a>) (CVPR'2018)</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td colspan="4" style="font-weight:bold;">Skeleton-based Action Recognition</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/skeleton/README.md">PoseC3D-FineGYM</a> (<a href="https://kennymckormick.github.io/posec3d/">Homepage</a>) (ArXiv'2021)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/skeleton/README.md">PoseC3D-NTURGB+D</a> (<a href="https://kennymckormick.github.io/posec3d/">Homepage</a>) (ArXiv'2021)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/skeleton/README.md">PoseC3D-UCF101</a> (<a href="https://kennymckormick.github.io/posec3d/">Homepage</a>) (ArXiv'2021)</td>
-    <td><a href="https://github.com/open-mmlab/mmaction2/blob/master/tools/data/skeleton/README.md">PoseC3D-HMDB51</a> (<a href="https://kennymckormick.github.io/posec3d/">Homepage</a>) (ArXiv'2021)</td>
-  </tr>
-</table>
-
-위와 같은 이미 준비된 dataset을 활용할 수 있습니다.
-
-## License
-
-This project is released under the [Apache 2.0 license](LICENSE).
-
-## Contributing
-
-We appreciate all contributions to improve MMAction2. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) in MMCV for more details about the contributing guideline.
-
-## Acknowledgement
-
-MMAction2 is an open-source project that is contributed by researchers and engineers from various colleges and companies.
-We appreciate all the contributors who implement their methods or add new features and users who give valuable feedback.
-We wish that the toolbox and benchmark could serve the growing research community by providing a flexible toolkit to reimplement existing methods and develop their new models.
-
-## Projects in OpenMMLab
-
-- [MIM](https://github.com/open-mmlab/mim): MIM installs OpenMMLab packages.
-- [MMClassification](https://github.com/open-mmlab/mmclassification): OpenMMLab image classification toolbox and benchmark.
-- [MMDetection](https://github.com/open-mmlab/mmdetection): OpenMMLab detection toolbox and benchmark.
-- [MMDetection3D](https://github.com/open-mmlab/mmdetection3d): OpenMMLab's next-generation platform for general 3D object detection.
-- [MMRotate](https://github.com/open-mmlab/mmrotate): OpenMMLab rotated object detection toolbox and benchmark.
-- [MMSegmentation](https://github.com/open-mmlab/mmsegmentation): OpenMMLab semantic segmentation toolbox and benchmark.
-- [MMOCR](https://github.com/open-mmlab/mmocr): OpenMMLab text detection, recognition, and understanding toolbox.
-- [MMPose](https://github.com/open-mmlab/mmpose): OpenMMLab pose estimation toolbox and benchmark.
-- [MMHuman3D](https://github.com/open-mmlab/mmhuman3d): OpenMMLab 3D human parametric model toolbox and benchmark.
-- [MMSelfSup](https://github.com/open-mmlab/mmselfsup): OpenMMLab self-supervised learning toolbox and benchmark.
-- [MMRazor](https://github.com/open-mmlab/mmrazor): OpenMMLab model compression toolbox and benchmark.
-- [MMFewShot](https://github.com/open-mmlab/mmfewshot): OpenMMLab fewshot learning toolbox and benchmark.
-- [MMAction2](https://github.com/open-mmlab/mmaction2): OpenMMLab's next-generation action understanding toolbox and benchmark.
-- [MMTracking](https://github.com/open-mmlab/mmtracking): OpenMMLab video perception toolbox and benchmark.
-- [MMFlow](https://github.com/open-mmlab/mmflow): OpenMMLab optical flow toolbox and benchmark.
-- [MMEditing](https://github.com/open-mmlab/mmediting): OpenMMLab image and video editing toolbox.
-- [MMGeneration](https://github.com/open-mmlab/mmgeneration): OpenMMLab image and video generative models toolbox.
-- [MMDeploy](https://github.com/open-mmlab/mmdeploy): OpenMMLab model deployment framework.
+#### [캡스톤디자인 경진대회 참여 포스터](https://docs.google.com/presentation/d/1bpxRl3pi8Qdm9mtQOApYPJharchJ7V_Y/edit?usp=sharing&ouid=109716382236660184193&rtpof=true&sd=true)  
+#### [운전자 폭행 감지 라즈베리파이 서버 Repository](https://github.com/cornpip/stop)
+#### [mmaction2 Repository](https://github.com/open-mmlab/mmaction2)
